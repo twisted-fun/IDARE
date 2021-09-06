@@ -1,6 +1,5 @@
 import struct
 import idaapi
-import ida_kernwin
 
 
 def rename_function(ea, new_name):
@@ -8,7 +7,7 @@ def rename_function(ea, new_name):
     idaapi.refresh_idaview_anyway()
 
 
-class jump_list:
+class jump_table:
     def __init__(self, startaddr, endaddr, member_format):
         self.startaddr = startaddr
         self.endaddr = endaddr
@@ -67,55 +66,9 @@ class jump_list:
         return function_ea
 
     def traverse(self):
-        jl = []
+        jt = []
         for member_addr in range(self.startaddr, self.endaddr, self.member_size):
             member_string = self.get_member_string(member_addr)
             member_function = self.get_member_function_ea(member_addr)
-            jl.append([member_string, member_function])
-        return jl
-
-
-class ida_func_re_t(idaapi.plugin_t):
-    flags = idaapi.PLUGIN_UNL
-    comment = ""
-    help = ""
-    wanted_name = "IDA Func RE"
-    wanted_hotkey = "Ctrl+Shift+F"
-
-    def init(self):
-        return idaapi.PLUGIN_OK
-
-    def run(self, arg):
-        # Get the jump table user selection
-        selection, startaddr, endaddr = ida_kernwin.read_range_selection(None)
-        if selection != 1:
-            print("Err - Please provide a jump list selection.")
-            return False
-        print("Selection range: 0x{:x} - 0x{:x}".format(startaddr, endaddr))
-
-        # Ask user for jump table member format to get the position
-        # of string, function and overall size of the member
-        member_format_input = ida_kernwin.ask_str(
-            "string:4,junk:8,function:4", 1000, "Jump Table Member Format"
-        )
-        member_format = []
-        for x in member_format_input.split(","):
-            mem_type, num_bytes = x.split(":")
-            num_bytes = int(num_bytes)
-            member_format.append([mem_type, num_bytes])
-        try:
-            jl = jump_list(startaddr, endaddr, member_format)
-        except:
-            print("Err - Jump table selection and Member format mismatch.")
-            return False
-
-        for mem_string, mem_function_ea in jl.traverse():
-            print("Renaming sub_{:X} -> fn_{}".format(mem_function_ea, mem_string))
-            rename_function(mem_function_ea, "fn_" + mem_string)
-
-    def term(self):
-        pass
-
-
-def PLUGIN_ENTRY():
-    return ida_func_re_t()
+            jt.append([member_string, member_function])
+        return jt
