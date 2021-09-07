@@ -1,6 +1,6 @@
 import idaapi
 import ida_kernwin
-from idare_utils import jump_table, rename_function
+from idare.utils import jump_table, rename_function
 
 
 class jump_table_func_rename_t(idaapi.plugin_t):
